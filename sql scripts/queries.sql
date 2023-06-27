@@ -207,3 +207,11 @@ from (select V.matricola, max((TMP.anno - A.anno)) as "Differenza_anni"
       where V.matricola = TMP.matricola and A.id_anno = V.id_anno and (TMP.stipendio_lordo - V.stipendio_lordo) = 0
       group by V.matricola) as Differenze
 order by Differenze.Differenza_anni desc
+
+-- Lista dipendenti con le informazioni di altre dimensioni
+select *
+from dim_anagrafica as AN, dim_azienda as AZ, dim_dipartimento as D, dim_filiale as F, 
+     dim_luogo_nascita as L, dim_contratto as C
+where AN.id_azienda = AZ.id_azienda and AN.id_dipartimento = D.id_dipartimento and
+      AN.id_filiale = F.id_filiale and AN.id_luogo_nascita = L.id_luogo_nascita and
+      AN.id_contratto = C.id_contratto
