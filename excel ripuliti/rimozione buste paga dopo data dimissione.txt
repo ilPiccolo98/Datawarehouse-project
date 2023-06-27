@@ -1,0 +1,8 @@
+delete from fact_busta_paga as B where B.matricola = 14 and B.id_data >= 13;
+
+-- matricola 48 ha una data di dimissione e un doppione con matricola 233 e mancano delle buste paga nei file ripuliti
+
+-- matricola 79 mancano dei valori nei file ripuliti
+
+-- matricola 95 mancano dei valori nei file ripuliti
+
