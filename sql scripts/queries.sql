@@ -125,7 +125,8 @@ from dim_data
 where datepart('YY', current_date) <> anno;
 
 insert into aggregazione_per_stipendio_medio_orario
-select B.matricola, A.id_anno, (sum(B.stipendio_lordo) / (40 * 48)) as stipendio_lordo, (sum(B.stipendio_netto) / (40 * 48)) as stipendio_netto, sum(B.competenze) / (40 * 48) as competenze
+select B.matricola, A.id_anno, (sum(B.stipendio_lordo) / (40 * 48)) as stipendio_lordo, 
+       (sum(B.stipendio_netto) / (40 * 48)) as stipendio_netto, sum(B.competenze) / (40 * 48) as competenze
 from fact_busta_paga as B, dim_data as D, anno_aggregazione_per_stipendio_medio_orario as A
 where B.id_data = D.id_data and A.anno = D.anno
 group by B.matricola, A.id_anno;
@@ -145,7 +146,8 @@ from dim_data
 where datepart('YY', current_date) <> anno;
 
 insert into aggregazione_per_stipendio_medio_mensile
-select B.matricola, A.id_anno, avg(stipendio_lordo) as stipendio_lordo, avg(stipendio_netto) as stipendio_netto, avg(competenze) as competenze
+select B.matricola, A.id_anno, avg(stipendio_lordo) as stipendio_lordo, avg(stipendio_netto) as stipendio_netto, 
+       avg(competenze) as competenze
 from fact_busta_paga as B, dim_data as D, anno_aggregazione_per_stipendio_medio_mensile as A
 where B.id_data = D.id_data and A.anno = D.anno
 group by B.matricola, A.id_anno;
@@ -165,7 +167,8 @@ from dim_data
 where datepart('YY', current_date) <> anno;
 
 insert into aggregazione_per_stipendio_annuo
-select B.matricola, A.id_anno, sum(stipendio_lordo) as stipendio_lordo, sum(stipendio_netto) as stipendio_netto, sum(competenze) as competenze
+select B.matricola, A.id_anno, sum(stipendio_lordo) as stipendio_lordo, sum(stipendio_netto) as stipendio_netto, 
+       sum(competenze) as competenze
 from fact_busta_paga as B, dim_data as D, anno_aggregazione_per_stipendio_annuo as A
 where B.id_data = D.id_data and A.anno = D.anno
 group by B.matricola, A.id_anno;
@@ -173,8 +176,6 @@ group by B.matricola, A.id_anno;
 select *
 from aggregazione_per_stipendio_annuo V, anno_aggregazione_per_stipendio_annuo A
 where V.id_anno = A.id_anno and V.matricola = $matricola and datepart('YY', current_date) - 1 = A.anno;
-
-
 
 -- stipendi annuali per dipendente (2017-2022)
 create view stipendio_anno_17_22v as
@@ -222,12 +223,13 @@ where v1.matricola = v2.matricola;
 
 delete from delta_stipendi where anno1 <> anno2 - 1;
 
+
+-- Situazioni particolari
 -- Top N stipendi (con info sull'impiegato)
 SELECT *
 FROM fact_busta_paga as B JOIN dim_anagrafica as D
 ON B.matricola = D.matricola
 ORDER BY B.stipendio_lordo DESC
-
 
 -- stipendi molto più alti (1k) rispetto alla media con pari livello
 CREATE VIEW stipendi_con_media_livello AS
