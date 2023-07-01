@@ -1,3 +1,4 @@
+-- STATISTICHE SU DATI ANAGRAFICI
 -- organico totale
 select count(matricola) from dim_anagrafica;
 
@@ -30,6 +31,14 @@ where A.data_dimissione is not null and
       (datepart('YY', A.data_dimissione) = (datepart('YY', current_date) - 1) or
       datepart('YY', A.data_dimissione) = (datepart('YY', current_date) - 2));
 
+-- Lista dipendenti con le informazioni di altre dimensioni
+select *
+from dim_anagrafica as AN, dim_azienda as AZ, dim_dipartimento as D, dim_filiale as F, 
+     dim_luogo_nascita as L, dim_contratto as C
+where AN.id_azienda = AZ.id_azienda and AN.id_dipartimento = D.id_dipartimento and
+      AN.id_filiale = F.id_filiale and AN.id_luogo_nascita = L.id_luogo_nascita and
+      AN.id_contratto = C.id_contratto
+
 -- STATISTICHE STIPENDI
 -- somma stipendi ultimi 3 anni
 select sum(B.stipendio_lordo) as "Somma Stipendi"
@@ -45,7 +54,6 @@ where B.id_data = D.id_data and
         datepart('YY', current_date) - D.anno = 1) and 
         D.mese >= datepart('MM', current_date));
 
---VISTE
 -- stipendio medio per dipartimento aggregazione_per_dipartimento
 insert into nome_dipartimento_aggregazione_per_dipartimento
 select *
@@ -58,6 +66,10 @@ where B.matricola = A.matricola and
       A.id_dipartimento = D.id_dipartimento
 group by D.id_dipartimento;
 
+select *
+from aggregazione_per_dipartimento as D, nome_dipartimento_aggregazione_per_dipartimento as N
+where D.id_dipartimento = N.id_dipartimento;
+
 -- stipendio medio per livello aggregazione_per_livello
 insert into livello_aggregazione_per_livello
 select *
@@ -68,6 +80,39 @@ select L.grado, avg(B.stipendio_lordo), avg(B.stipendio_netto), avg(B.competenze
 from  fact_busta_paga as B, livello_aggregazione_per_livello as L
 where B.id_livello = L.id_livello
 group by L.grado;
+
+select *
+from aggregazione_per_livello as L, livello_aggregazione_per_livello as A
+where L.id_livello = A.id_livello;
+
+
+-- DETTAGLI SINGOLO DIPENDENTE
+-- dati anagrafici
+select *
+from dim_anagrafica 
+where matricola = $matricola
+
+-- Dati rapporto di lavoro (dipartimento, mansione, livello)
+select distinct A.matricola, L.grado, D.nome 
+from dim_anagrafica as A, dim_dipartimento as D, fact_busta_paga as B, dim_livello as L
+where A.matricola = B.matricola and B.id_livello = L.id_livello and A.id_dipartimento = D.id_dipartimento and 
+      A.matricola = $matricola and L.grado = (select max(L.grado)
+                                              from fact_busta_paga as B, dim_livello as L
+                                              where B.id_livello = L.id_livello and B.matricola = $matricola);
+
+-- stipendio ultimo mese
+select B.matricola, B.stipendio_lordo, B.stipendio_netto, B.competenze, D.mese, D.anno
+from fact_busta_paga as B, dim_data as D
+where B.id_data = D.id_data and B.matricola = $matricola and 
+      D.anno = (select max(D.anno)
+                from fact_busta_paga as B, dim_data as D
+                where B.id_data = D.id_data and B.matricola = $matricola) and
+      D.mese = (select max(D.mese)
+                from fact_busta_paga as B, dim_data as D
+                where B.id_data = D.id_data and B.matricola = $matricola and D.anno = 
+                        (select max(D.anno)
+                        from fact_busta_paga as B, dim_data as D
+                        where B.id_data = D.id_data and B.matricola = $matricola));
 
 -- stipendio medio orario, calcolato su media ultimo anno solare AGGREGAZIONE_PER_STIPENDIO_MEDIO_ORARIO
 insert into matricola_aggregazione_per_stipendio_medio_orario
@@ -207,11 +252,3 @@ from (select V.matricola, max((TMP.anno - A.anno)) as "Differenza_anni"
       where V.matricola = TMP.matricola and A.id_anno = V.id_anno and (TMP.stipendio_lordo - V.stipendio_lordo) = 0
       group by V.matricola) as Differenze
 order by Differenze.Differenza_anni desc
-
--- Lista dipendenti con le informazioni di altre dimensioni
-select *
-from dim_anagrafica as AN, dim_azienda as AZ, dim_dipartimento as D, dim_filiale as F, 
-     dim_luogo_nascita as L, dim_contratto as C
-where AN.id_azienda = AZ.id_azienda and AN.id_dipartimento = D.id_dipartimento and
-      AN.id_filiale = F.id_filiale and AN.id_luogo_nascita = L.id_luogo_nascita and
-      AN.id_contratto = C.id_contratto
