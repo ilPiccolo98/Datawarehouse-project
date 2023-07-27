@@ -28,8 +28,8 @@ where datepart('YY', A.data_assunzione) = (datepart('YY', current_date) - 1) or
 select *
 from dim_anagrafica as A
 where A.data_dimissione is not null and
-      (datepart('YY', A.data_dimissione) = (datepart('YY', current_date) - 1) or
-      datepart('YY', A.data_dimissione) = (datepart('YY', current_date) - 2));
+      (datepart('YY', A.data_dimissione) = (datepart('YY', current_date)) or
+      datepart('YY', A.data_dimissione) = (datepart('YY', current_date) - 1));
 
 -- Lista dipendenti con le informazioni di altre dimensioni
 select *
